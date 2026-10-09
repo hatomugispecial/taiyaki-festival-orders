@@ -2,6 +2,18 @@ import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 import { orderTotal, type OrderDraft } from "@/lib/order";
 
+export async function GET() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) return NextResponse.json({ ok: true, rows: [] });
+  try {
+    const sql = neon(databaseUrl);
+    const rows = await sql`SELECT id, customer_name, affiliation, contact, total_yen, order_data, created_at FROM taiyaki_orders ORDER BY created_at DESC LIMIT 100`;
+    return NextResponse.json({ ok: true, rows });
+  } catch (error) {
+    return NextResponse.json({ ok: false, message: error instanceof Error ? error.message : "注文の取得に失敗しました" }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   const draft = (await request.json()) as OrderDraft;
   const total = orderTotal(draft);
