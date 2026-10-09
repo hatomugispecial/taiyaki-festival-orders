@@ -4,7 +4,7 @@ export type MemoType = "学生版" | "保護者版";
 
 export type TaiyakiItem = { flavor: Flavor; toppings: Topping[]; quantity: number };
 export type MemoItems = { student: number; guardian: number };
-export type Customer = { name: string; affiliation: string; contact: string; memo: string };
+export type Customer = { name: string; affiliation: string; contact: string; memo: string; age: string; gender: string; reasons: string[]; freeReason: string };
 export type OrderDraft = { customer: Customer; taiyaki: TaiyakiItem[]; memos: MemoItems; instagramFollow: boolean };
 
 export const flavors: Flavor[] = ["あんこ", "塩あんこ", "あんバター", "チーズ"];
