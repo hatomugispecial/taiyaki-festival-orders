@@ -1,4 +1,4 @@
- .topping-label{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+ .topping-label{display:block;color:var(--text);font-size:12px;font-weight:700;margin-top:3px}
 .item-follow { 
 	display: flex; 
 	align-items: center; 
