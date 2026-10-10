@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
-import { flavors, orderTotal, toppings, yen, type Customer, type OrderDraft, type TaiyakiItem, type Topping } from "@/lib/order";
+import { flavors, orderTotal, toppingOptions, toppings, yen, type Customer, type OrderDraft, type TaiyakiItem, type Topping } from "@/lib/order";
 
 type OrderRow = { id: string; total_yen: number; order_data: OrderDraft; handed: boolean; created_at: string };
 const emptyCustomer: Customer = { name: "", affiliation: "", contact: "", memo: "", age: "", gender: "", reasons: [], freeReason: "" };
 const ageOptions = ["10代未満", "10代", "20代", "30代", "40代", "50代", "60代以上"];
 const genderOptions = ["女性", "男性", "回答しない", "その他"];
 const reasonOptions = ["受験生の子どもがいるから", "人に教えたいから", "自由記述"];
-const emptyTaiyaki = (): TaiyakiItem[] => flavors.map((flavor) => ({ flavor, toppings: [], quantity: 0, instagramFollow: false }));
+const emptyTaiyaki = (): TaiyakiItem[] => flavors.flatMap((flavor) => toppingOptions.map((option) => ({ flavor, toppings: option.toppings, quantity: 0, instagramFollow: false })));
 
 function Quantity({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return <div className="quantity"><button type="button" aria-label="減らす" onClick={() => onChange(Math.max(0, value - 1))}>−</button><strong>{value}</strong><button type="button" aria-label="増やす" onClick={() => onChange(value + 1)}>＋</button></div>;

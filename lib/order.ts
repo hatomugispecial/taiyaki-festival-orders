@@ -9,6 +9,12 @@ export type OrderDraft = { customer: Customer; taiyaki: TaiyakiItem[]; memos: Me
 
 export const flavors: Flavor[] = ["あんこ", "塩あんこ", "あんバター", "チーズ"];
 export const toppings: Topping[] = ["アイス", "ホイップ"];
+export const toppingOptions: { label: string; toppings: Topping[] }[] = [
+  { label: "トッピングなし", toppings: [] },
+  { label: "アイスのみ", toppings: ["アイス"] },
+  { label: "ホイップのみ", toppings: ["ホイップ"] },
+  { label: "アイスとホイップ", toppings: ["アイス", "ホイップ"] },
+];
 
 export function taiyakiUnitPrice(item: TaiyakiItem) {
   const basePrice = item.toppings.length === 0 ? 300 : 350;

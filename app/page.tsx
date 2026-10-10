@@ -9,12 +9,11 @@ import {
   orderTotal,
   taiyakiTotal,
   taiyakiUnitPrice,
-  toppings,
+  toppingOptions,
   yen,
   type Customer,
   type OrderDraft,
   type TaiyakiItem,
-  type Topping,
 } from "@/lib/order";
 
 const emptyCustomer: Customer = {
@@ -27,12 +26,14 @@ const emptyCustomer: Customer = {
   reasons: [],
   freeReason: "",
 };
-const emptyTaiyaki: TaiyakiItem[] = flavors.map((flavor) => ({
-  flavor,
-  toppings: [],
-  quantity: 0,
-  instagramFollow: false,
-}));
+const emptyTaiyaki: TaiyakiItem[] = flavors.flatMap((flavor) =>
+  toppingOptions.map((option) => ({
+    flavor,
+    toppings: option.toppings,
+    quantity: 0,
+    instagramFollow: false,
+  })),
+);
 
 function Quantity({
   value,
@@ -79,19 +80,6 @@ export default function OrderPage() {
     setTaiyaki((items) =>
       items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
     );
-  const toggleTopping = (index: number, topping: Topping) =>
-    setTaiyaki((items) =>
-      items.map((item, i) =>
-        i === index
-          ? {
-              ...item,
-              toppings: item.toppings.includes(topping)
-                ? item.toppings.filter((value) => value !== topping)
-                : [...item.toppings, topping],
-            }
-          : item,
-      ),
-    );
   const saveOrder = async () => {
     setMessage("保存中...");
     const response = await fetch("/api/orders", {
@@ -117,9 +105,7 @@ export default function OrderPage() {
         <div key={item.flavor}>
           <span>
             {item.flavor}
-            {item.toppings.length
-              ? `（${item.toppings.join("・")}）`
-              : ""} × {item.quantity}
+            {item.toppings.length ? `（${item.toppings.join("・")}）` : "（なし）"} × {item.quantity}
             {item.instagramFollow ? " / Instagram割引" : ""}
           </span>
           <strong>{yen(taiyakiUnitPrice(item) * item.quantity)}</strong>
@@ -205,26 +191,11 @@ export default function OrderPage() {
               <h3>たい焼き</h3>
               <div className="product-list">
                 {taiyaki.map((item, index) => (
-                  <div className="product-row" key={item.flavor}>
+                  <div className="product-row" key={`${item.flavor}-${item.toppings.join("-") || "none"}`}>
                     <div className="product-name">
                       <strong>{item.flavor}</strong>
+                      <span className="topping-label">{toppingOptions.find((option) => option.toppings.join("-") === item.toppings.join("-"))?.label}</span>
                       <span>{yen(taiyakiUnitPrice(item))} / 個</span>
-                      <div className="option-list">
-                        {toppings.map((topping) => (
-                          <button
-                            className={
-                              item.toppings.includes(topping)
-                                ? "option selected"
-                                : "option"
-                            }
-                            type="button"
-                            onClick={() => toggleTopping(index, topping)}
-                            key={topping}
-                          >
-                            {topping}
-                          </button>
-                        ))}
-                      </div>
                       <label className="item-follow">
                         <input
                           type="checkbox"
@@ -235,7 +206,7 @@ export default function OrderPage() {
                             })
                           }
                         />
-                        Instagramフォローで50円引き
+                        50円引き
                       </label>
                     </div>
                     <Quantity

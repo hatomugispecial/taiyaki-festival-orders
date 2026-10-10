@@ -1,3 +1,4 @@
+ .topping-label{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 .item-follow { 
 	display: flex; 
 	align-items: center; 
