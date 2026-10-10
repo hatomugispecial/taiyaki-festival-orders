@@ -17,7 +17,9 @@ type SalesDay = {
 type HourlySales = {
   hour: number;
   taiyaki: number;
+  taiyakiCount: number;
   memo: number;
+  memoCount: number;
   student: number;
   guardian: number;
 };
@@ -51,13 +53,13 @@ export default function SalesPage() {
   const total = days.reduce((sum, day) => sum + day.total, 0);
   const taiyakiTotal = days.reduce((sum, day) => sum + day.taiyakiTotal, 0);
   const memoTotal = days.reduce((sum, day) => sum + day.memoTotal, 0);
-  const maxHourlyTaiyaki = Math.max(...hourly.map((item) => item.taiyaki), 1);
+  const maxHourlyTaiyaki = Math.max(...hourly.map((item) => item.taiyakiCount), 1);
   const flavorNames = flavors.map((item) => item.name);
   const maxFlavorHourly = Math.max(
     ...flavorHourly.flatMap((item) => Object.values(item.flavors)),
     1,
   );
-  const maxHourlyMemo = Math.max(...hourly.map((item) => item.memo), 1);
+  const maxHourlyMemo = Math.max(...hourly.map((item) => item.memoCount), 1);
   const bar = (value: number, max: number) =>
     `${Math.max(value > 0 ? 4 : 0, (value / max) * 100)}%`;
 
@@ -160,18 +162,18 @@ export default function SalesPage() {
         <section className="sales-charts">
           <div className="chart-panel">
             <div className="chart-heading">
-              <h3>たい焼きの時間帯別売上</h3>
+              <h3>たい焼きの時間帯別販売数</h3>
               <span>10:00〜16:59 / 1時間単位</span>
             </div>
             <div className="chart-with-axis">
-              <div className="y-axis"><span>{yen(maxHourlyTaiyaki)}</span><span>{yen(Math.round(maxHourlyTaiyaki / 2))}</span><span>0円</span></div>
+              <div className="y-axis"><span>{maxHourlyTaiyaki}個</span><span>{Math.round(maxHourlyTaiyaki / 2)}個</span><span>0個</span></div>
               <div className="bar-chart hourly-chart">
               {hourly.map((item) => (
                 <div className="bar-column" key={item.hour}>
-                  <strong>{yen(item.taiyaki)}</strong>
+                  <strong>{item.taiyakiCount}個</strong>
                   <div className="bar-track">
                     <i
-                      style={{ height: bar(item.taiyaki, maxHourlyTaiyaki) }}
+                      style={{ height: bar(item.taiyakiCount, maxHourlyTaiyaki) }}
                     />
                   </div>
                   <span>{String(item.hour).padStart(2, "0")}時</span>
@@ -226,7 +228,7 @@ export default function SalesPage() {
           </div>
           <div className="chart-panel memo-chart-panel">
             <div className="chart-heading">
-              <h3>合格体験記の時間帯別売上</h3>
+              <h3>合格体験記の時間帯別販売数</h3>
               <span>10:00〜16:59 / 1時間単位</span>
             </div>
             <div className="legend">
@@ -235,24 +237,24 @@ export default function SalesPage() {
               <span className="legend-guardian">保護者版</span>
             </div>
             <div className="chart-with-axis">
-              <div className="y-axis"><span>{yen(maxHourlyMemo)}</span><span>{yen(Math.round(maxHourlyMemo / 2))}</span><span>0円</span></div>
+              <div className="y-axis"><span>{maxHourlyMemo}冊</span><span>{Math.round(maxHourlyMemo / 2)}冊</span><span>0冊</span></div>
               <div className="bar-chart hourly-chart">
               {hourly.map((item) => (
                 <div className="bar-column memo-bars" key={item.hour}>
-                  <strong>{yen(item.memo)}</strong>
+                  <strong>{item.memoCount}冊</strong>
                   <div className="bar-track">
                     <i
                       className="bar-all"
-                      style={{ height: bar(item.memo, maxHourlyMemo) }}
+                      style={{ height: bar(item.memoCount, maxHourlyMemo) }}
                     />
-                    <i
-                      className="bar-student"
-                      style={{ height: bar(item.student * 500, maxHourlyMemo) }}
-                    />
+                       <i
+                         className="bar-student"
+                         style={{ height: bar(item.student, maxHourlyMemo) }}
+                       />
                     <i
                       className="bar-guardian"
                       style={{
-                        height: bar(item.guardian * 600, maxHourlyMemo),
+                           height: bar(item.guardian, maxHourlyMemo),
                       }}
                     />
                   </div>

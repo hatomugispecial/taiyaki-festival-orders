@@ -29,7 +29,7 @@ export async function GET() {
     const rows =
       await sql`SELECT order_data, total_yen, created_at FROM taiyaki_orders ORDER BY created_at DESC LIMIT 10000`;
     const byDate = new Map<string, SalesDay>();
-    const hourly = Array.from({ length: 7 }, (_, index) => ({ hour: index + 10, taiyaki: 0, memo: 0, student: 0, guardian: 0 }));
+    const hourly = Array.from({ length: 7 }, (_, index) => ({ hour: index + 10, taiyaki: 0, taiyakiCount: 0, memo: 0, memoCount: 0, student: 0, guardian: 0 }));
     const flavors = new Map<string, FlavorSales>();
     const flavorHourly = Array.from({ length: 7 }, (_, index) => ({ hour: index + 10, flavors: {} as Record<string, number> }));
 
@@ -74,7 +74,9 @@ export async function GET() {
       const memoTotal = calculateMemoTotal(draft.memos ?? { student: 0, guardian: 0 });
       if (hour >= 10 && hour <= 16) {
         hourly[hour - 10].taiyaki += taiyakiTotal;
+        hourly[hour - 10].taiyakiCount += (draft.taiyaki ?? []).reduce((sum, item) => sum + Number(item.quantity ?? 0), 0);
         hourly[hour - 10].memo += memoTotal;
+        hourly[hour - 10].memoCount += student + guardian;
         hourly[hour - 10].student += student;
         hourly[hour - 10].guardian += guardian;
       }
