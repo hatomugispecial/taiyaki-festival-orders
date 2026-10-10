@@ -2,7 +2,7 @@ export type Flavor = "あんこ" | "塩あんこ" | "あんバター" | "チー�
 export type Topping = "アイス" | "ホイップ";
 export type MemoType = "学生版" | "保護者版";
 
-export type TaiyakiItem = { flavor: Flavor; toppings: Topping[]; quantity: number };
+export type TaiyakiItem = { flavor: Flavor; toppings: Topping[]; quantity: number; instagramFollow: boolean };
 export type MemoItems = { student: number; guardian: number };
 export type Customer = { name: string; affiliation: string; contact: string; memo: string; age: string; gender: string; reasons: string[]; freeReason: string };
 export type OrderDraft = { customer: Customer; taiyaki: TaiyakiItem[]; memos: MemoItems; instagramFollow: boolean };
@@ -10,13 +10,13 @@ export type OrderDraft = { customer: Customer; taiyaki: TaiyakiItem[]; memos: Me
 export const flavors: Flavor[] = ["あんこ", "塩あんこ", "あんバター", "チーズ"];
 export const toppings: Topping[] = ["アイス", "ホイップ"];
 
-export function taiyakiUnitPrice(item: TaiyakiItem, instagramFollow: boolean) {
-  if (item.toppings.length === 0) return 300;
-  return instagramFollow ? 300 : 350;
+export function taiyakiUnitPrice(item: TaiyakiItem) {
+  const basePrice = item.toppings.length === 0 ? 300 : 350;
+  return item.instagramFollow ? basePrice - 50 : basePrice;
 }
 
-export function taiyakiTotal(items: TaiyakiItem[], instagramFollow: boolean) {
-  return items.reduce((sum, item) => sum + taiyakiUnitPrice(item, instagramFollow) * item.quantity, 0);
+export function taiyakiTotal(items: TaiyakiItem[]) {
+  return items.reduce((sum, item) => sum + taiyakiUnitPrice(item) * item.quantity, 0);
 }
 
 export function memoTotal(memos: MemoItems) {
@@ -27,7 +27,7 @@ export function memoTotal(memos: MemoItems) {
 }
 
 export function orderTotal(draft: OrderDraft) {
-  return taiyakiTotal(draft.taiyaki, draft.instagramFollow) + memoTotal(draft.memos);
+  return taiyakiTotal(draft.taiyaki) + memoTotal(draft.memos);
 }
 
 export function yen(value: number) { return new Intl.NumberFormat("ja-JP").format(value) + "円"; }
