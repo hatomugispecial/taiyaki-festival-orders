@@ -16,6 +16,7 @@ type SalesDay = {
 };
 type HourlySales = { hour: number; taiyaki: number; memo: number; student: number; guardian: number };
 type FlavorSales = { name: string; total: number; count: number };
+type FlavorHourlySales = { hour: number; flavors: Record<string, number> };
 const yen = (value: number) =>
   new Intl.NumberFormat("ja-JP").format(value) + "円";
 const countEntries = (values: Record<string, number>) =>
@@ -25,6 +26,7 @@ export default function SalesPage() {
   const [days, setDays] = useState<SalesDay[]>([]);
   const [hourly, setHourly] = useState<HourlySales[]>([]);
   const [flavors, setFlavors] = useState<FlavorSales[]>([]);
+  const [flavorHourly, setFlavorHourly] = useState<FlavorHourlySales[]>([]);
   const [message, setMessage] = useState("");
   const load = () =>
     fetch("/api/sales")
@@ -34,6 +36,7 @@ export default function SalesPage() {
           setDays(data.days);
           setHourly(data.hourly ?? []);
           setFlavors(data.flavors ?? []);
+          setFlavorHourly(data.flavorHourly ?? []);
         }
         else setMessage(data.message);
       });
@@ -44,7 +47,8 @@ export default function SalesPage() {
   const taiyakiTotal = days.reduce((sum, day) => sum + day.taiyakiTotal, 0);
   const memoTotal = days.reduce((sum, day) => sum + day.memoTotal, 0);
   const maxHourlyTaiyaki = Math.max(...hourly.map((item) => item.taiyaki), 1);
-  const maxFlavorSales = Math.max(...flavors.map((item) => item.total), 1);
+  const flavorNames = flavors.map((item) => item.name);
+  const maxFlavorHourly = Math.max(...flavorHourly.flatMap((item) => Object.values(item.flavors)), 1);
   const maxHourlyMemo = Math.max(...hourly.map((item) => item.memo), 1);
   const bar = (value: number, max: number) => `${Math.max(value > 0 ? 4 : 0, (value / max) * 100)}%`;
 
@@ -144,9 +148,9 @@ export default function SalesPage() {
         </div>
       )}
       {days.length > 0 && <section className="sales-charts">
-        <div className="chart-panel"><div className="chart-heading"><h3>たい焼きの時間帯別売上</h3><span>全期間</span></div><div className="bar-chart hourly-chart">{hourly.filter((item) => item.taiyaki > 0).map((item) => <div className="bar-column" key={item.hour}><strong>{yen(item.taiyaki)}</strong><div className="bar-track"><i style={{ height: bar(item.taiyaki, maxHourlyTaiyaki) }} /></div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
-        <div className="chart-panel"><div className="chart-heading"><h3>味ごとのたい焼き売上</h3><span>全期間</span></div><div className="bar-chart flavor-chart">{flavors.map((item) => <div className="bar-column" key={item.name}><strong>{yen(item.total)}</strong><div className="bar-track"><i style={{ height: bar(item.total, maxFlavorSales) }} /></div><span>{item.name}</span></div>)}</div></div>
-        <div className="chart-panel memo-chart-panel"><div className="chart-heading"><h3>合格体験記の時間帯別売上</h3><span>全体 / 学生版 / 保護者版</span></div><div className="legend"><span className="legend-all">全体</span><span className="legend-student">学生版</span><span className="legend-guardian">保護者版</span></div><div className="bar-chart hourly-chart">{hourly.filter((item) => item.memo > 0).map((item) => <div className="bar-column memo-bars" key={item.hour}><strong>{yen(item.memo)}</strong><div className="bar-track"><i className="bar-all" style={{ height: bar(item.memo, maxHourlyMemo) }} /><i className="bar-student" style={{ height: bar(item.student * 500, maxHourlyMemo) }} /><i className="bar-guardian" style={{ height: bar(item.guardian * 600, maxHourlyMemo) }} /></div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
+        <div className="chart-panel"><div className="chart-heading"><h3>たい焼きの時間帯別売上</h3><span>10:00〜17:59 / 1時間単位</span></div><div className="bar-chart hourly-chart">{hourly.map((item) => <div className="bar-column" key={item.hour}><strong>{yen(item.taiyaki)}</strong><div className="bar-track"><i style={{ height: bar(item.taiyaki, maxHourlyTaiyaki) }} /></div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
+        <div className="chart-panel"><div className="chart-heading"><h3>味ごとのたい焼き販売数推移</h3><span>個数 / 10:00〜17:59</span></div><div className="legend">{flavorNames.map((name, index) => <span className={`legend-flavor flavor-${index % 4}`} key={name}>{name}</span>)}</div><div className="bar-chart hourly-chart flavor-trend-chart">{flavorHourly.map((item) => <div className="bar-column" key={item.hour}><strong>{Object.values(item.flavors).reduce((sum, value) => sum + value, 0)}個</strong><div className="bar-track flavor-bars">{flavorNames.map((name, index) => <i className={`flavor-bar flavor-${index % 4}`} style={{ height: bar(item.flavors[name] ?? 0, maxFlavorHourly) }} key={name} />)}</div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
+        <div className="chart-panel memo-chart-panel"><div className="chart-heading"><h3>合格体験記の時間帯別売上</h3><span>10:00〜17:59 / 1時間単位</span></div><div className="legend"><span className="legend-all">全体</span><span className="legend-student">学生版</span><span className="legend-guardian">保護者版</span></div><div className="bar-chart hourly-chart">{hourly.map((item) => <div className="bar-column memo-bars" key={item.hour}><strong>{yen(item.memo)}</strong><div className="bar-track"><i className="bar-all" style={{ height: bar(item.memo, maxHourlyMemo) }} /><i className="bar-student" style={{ height: bar(item.student * 500, maxHourlyMemo) }} /><i className="bar-guardian" style={{ height: bar(item.guardian * 600, maxHourlyMemo) }} /></div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
       </section>}
       <div className="sales-note">
         <BarChart3 size={16} /> 集計は注文確定時の注文内容をもとにしています。
