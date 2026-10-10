@@ -14,7 +14,13 @@ type SalesDay = {
   toppings: Record<string, number>;
   memos: { student: number; guardian: number };
 };
-type HourlySales = { hour: number; taiyaki: number; memo: number; student: number; guardian: number };
+type HourlySales = {
+  hour: number;
+  taiyaki: number;
+  memo: number;
+  student: number;
+  guardian: number;
+};
 type FlavorSales = { name: string; total: number; count: number };
 type FlavorHourlySales = { hour: number; flavors: Record<string, number> };
 const yen = (value: number) =>
@@ -37,8 +43,7 @@ export default function SalesPage() {
           setHourly(data.hourly ?? []);
           setFlavors(data.flavors ?? []);
           setFlavorHourly(data.flavorHourly ?? []);
-        }
-        else setMessage(data.message);
+        } else setMessage(data.message);
       });
   useEffect(() => {
     load();
@@ -48,9 +53,13 @@ export default function SalesPage() {
   const memoTotal = days.reduce((sum, day) => sum + day.memoTotal, 0);
   const maxHourlyTaiyaki = Math.max(...hourly.map((item) => item.taiyaki), 1);
   const flavorNames = flavors.map((item) => item.name);
-  const maxFlavorHourly = Math.max(...flavorHourly.flatMap((item) => Object.values(item.flavors)), 1);
+  const maxFlavorHourly = Math.max(
+    ...flavorHourly.flatMap((item) => Object.values(item.flavors)),
+    1,
+  );
   const maxHourlyMemo = Math.max(...hourly.map((item) => item.memo), 1);
-  const bar = (value: number, max: number) => `${Math.max(value > 0 ? 4 : 0, (value / max) * 100)}%`;
+  const bar = (value: number, max: number) =>
+    `${Math.max(value > 0 ? 4 : 0, (value / max) * 100)}%`;
 
   return (
     <main className="app-shell">
@@ -147,11 +156,114 @@ export default function SalesPage() {
           ))}
         </div>
       )}
-      {days.length > 0 && <section className="sales-charts">
-        <div className="chart-panel"><div className="chart-heading"><h3>たい焼きの時間帯別売上</h3><span>10:00〜16:59 / 1時間単位</span></div><div className="bar-chart hourly-chart">{hourly.map((item) => <div className="bar-column" key={item.hour}><strong>{yen(item.taiyaki)}</strong><div className="bar-track"><i style={{ height: bar(item.taiyaki, maxHourlyTaiyaki) }} /></div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
-        <div className="chart-panel"><div className="chart-heading"><h3>味ごとのたい焼き販売数推移</h3><span>個数 / 10:00〜16:59</span></div><div className="legend">{flavorNames.map((name, index) => <span className={`legend-flavor flavor-${index % 4}`} key={name}>{name}</span>)}</div><div className="bar-chart hourly-chart flavor-trend-chart">{flavorHourly.map((item) => <div className="bar-column" key={item.hour}><strong>{Object.values(item.flavors).reduce((sum, value) => sum + value, 0)}個</strong><div className="bar-track flavor-bars">{flavorNames.map((name, index) => <i className={`flavor-bar flavor-${index % 4}`} style={{ height: bar(item.flavors[name] ?? 0, maxFlavorHourly) }} key={name} />)}</div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
-        <div className="chart-panel memo-chart-panel"><div className="chart-heading"><h3>合格体験記の時間帯別売上</h3><span>10:00〜16:59 / 1時間単位</span></div><div className="legend"><span className="legend-all">全体</span><span className="legend-student">学生版</span><span className="legend-guardian">保護者版</span></div><div className="bar-chart hourly-chart">{hourly.map((item) => <div className="bar-column memo-bars" key={item.hour}><strong>{yen(item.memo)}</strong><div className="bar-track"><i className="bar-all" style={{ height: bar(item.memo, maxHourlyMemo) }} /><i className="bar-student" style={{ height: bar(item.student * 500, maxHourlyMemo) }} /><i className="bar-guardian" style={{ height: bar(item.guardian * 600, maxHourlyMemo) }} /></div><span>{String(item.hour).padStart(2, "0")}時</span></div>)}</div></div>
-      </section>}
+      {days.length > 0 && (
+        <section className="sales-charts">
+          <div className="chart-panel">
+            <div className="chart-heading">
+              <h3>たい焼きの時間帯別売上</h3>
+              <span>10:00〜16:59 / 1時間単位</span>
+            </div>
+            <div className="chart-with-axis">
+              <div className="y-axis"><span>{yen(maxHourlyTaiyaki)}</span><span>{yen(Math.round(maxHourlyTaiyaki / 2))}</span><span>0円</span></div>
+              <div className="bar-chart hourly-chart">
+              {hourly.map((item) => (
+                <div className="bar-column" key={item.hour}>
+                  <strong>{yen(item.taiyaki)}</strong>
+                  <div className="bar-track">
+                    <i
+                      style={{ height: bar(item.taiyaki, maxHourlyTaiyaki) }}
+                    />
+                  </div>
+                  <span>{String(item.hour).padStart(2, "0")}時</span>
+                </div>
+              ))}
+              </div>
+            </div>
+          </div>
+          <div className="chart-panel">
+            <div className="chart-heading">
+              <h3>味ごとのたい焼き販売数推移</h3>
+              <span>個数 / 10:00〜16:59</span>
+            </div>
+            <div className="legend">
+              {flavorNames.map((name, index) => (
+                <span
+                  className={`legend-flavor flavor-${index % 4}`}
+                  key={name}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+            <div className="chart-with-axis">
+              <div className="y-axis"><span>{maxFlavorHourly}個</span><span>{Math.round(maxFlavorHourly / 2)}個</span><span>0個</span></div>
+              <div className="bar-chart hourly-chart flavor-trend-chart">
+              {flavorHourly.map((item) => (
+                <div className="bar-column" key={item.hour}>
+                  <strong>
+                    {Object.values(item.flavors).reduce(
+                      (sum, value) => sum + value,
+                      0,
+                    )}
+                    個
+                  </strong>
+                  <div className="bar-track flavor-bars">
+                    {flavorNames.map((name, index) => (
+                      <i
+                        className={`flavor-bar flavor-${index % 4}`}
+                        style={{
+                          height: bar(item.flavors[name] ?? 0, maxFlavorHourly),
+                        }}
+                        key={name}
+                      />
+                    ))}
+                  </div>
+                  <span>{String(item.hour).padStart(2, "0")}時</span>
+                </div>
+              ))}
+              </div>
+            </div>
+          </div>
+          <div className="chart-panel memo-chart-panel">
+            <div className="chart-heading">
+              <h3>合格体験記の時間帯別売上</h3>
+              <span>10:00〜16:59 / 1時間単位</span>
+            </div>
+            <div className="legend">
+              <span className="legend-all">全体</span>
+              <span className="legend-student">学生版</span>
+              <span className="legend-guardian">保護者版</span>
+            </div>
+            <div className="chart-with-axis">
+              <div className="y-axis"><span>{yen(maxHourlyMemo)}</span><span>{yen(Math.round(maxHourlyMemo / 2))}</span><span>0円</span></div>
+              <div className="bar-chart hourly-chart">
+              {hourly.map((item) => (
+                <div className="bar-column memo-bars" key={item.hour}>
+                  <strong>{yen(item.memo)}</strong>
+                  <div className="bar-track">
+                    <i
+                      className="bar-all"
+                      style={{ height: bar(item.memo, maxHourlyMemo) }}
+                    />
+                    <i
+                      className="bar-student"
+                      style={{ height: bar(item.student * 500, maxHourlyMemo) }}
+                    />
+                    <i
+                      className="bar-guardian"
+                      style={{
+                        height: bar(item.guardian * 600, maxHourlyMemo),
+                      }}
+                    />
+                  </div>
+                  <span>{String(item.hour).padStart(2, "0")}時</span>
+                </div>
+              ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
       <div className="sales-note">
         <BarChart3 size={16} /> 集計は注文確定時の注文内容をもとにしています。
       </div>
