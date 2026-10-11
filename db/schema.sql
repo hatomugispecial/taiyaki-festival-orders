@@ -7,5 +7,7 @@ CREATE TABLE IF NOT EXISTS taiyaki_orders (
   order_data jsonb NOT NULL,
   total_yen integer NOT NULL,
   handed boolean NOT NULL DEFAULT false,
+  order_date date,
+  order_number integer,
   created_at timestamptz NOT NULL DEFAULT now()
 );
