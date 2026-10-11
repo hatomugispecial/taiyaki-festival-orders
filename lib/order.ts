@@ -26,10 +26,8 @@ export function taiyakiTotal(items: TaiyakiItem[]) {
 }
 
 export function memoTotal(memos: MemoItems) {
-  if (memos.student > 0 && memos.guardian > 0) {
-    return 1000 + Math.max(0, memos.student - 1) * 500 + Math.max(0, memos.guardian - 1) * 600;
-  }
-  return memos.student * 500 + memos.guardian * 600;
+  const sets = Math.min(memos.student, memos.guardian);
+  return sets * 1000 + (memos.student - sets) * 500 + (memos.guardian - sets) * 600;
 }
 
 export function orderTotal(draft: OrderDraft) {
