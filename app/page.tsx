@@ -111,16 +111,12 @@ export default function OrderPage() {
           <strong>{yen(taiyakiUnitPrice(item) * item.quantity)}</strong>
         </div>
       ))}
-      {memos.student > 0 && (
+      {(memos.student > 0 || memos.guardian > 0) && (
         <div>
-          <span>合格体験記・学生版 × {memos.student}</span>
-          <strong>{yen(memos.student * 500)}</strong>
-        </div>
-      )}
-      {memos.guardian > 0 && (
-        <div>
-          <span>合格体験記・保護者版 × {memos.guardian}</span>
-          <strong>{yen(memos.guardian * 600)}</strong>
+          <span>
+            合格体験記・学生版 {memos.student}冊 / 保護者版 {memos.guardian}冊
+          </span>
+          <strong>{yen(memoTotal(memos))}</strong>
         </div>
       )}
     </div>
