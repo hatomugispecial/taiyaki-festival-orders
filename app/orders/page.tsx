@@ -304,7 +304,7 @@ export default function OrdersPage() {
                       />
                     </div>
                     <div className="edit-total">
-                      編集後の合計: <strong>{yen(orderTotal(draft))}</strong>
+                      編集後の合計: <strong>{yen(orderTotal(draft, rows.find((row) => row.id === editing)?.created_at))}</strong>
                     </div>
                     <h4>購入者情報</h4>
                     <div className="form-grid">

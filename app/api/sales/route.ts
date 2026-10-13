@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
-import { memoTotal as calculateMemoTotal, taiyakiUnitPrice, type OrderDraft } from "@/lib/order";
+import { memoTotal as calculateMemoTotal, TAIYAKI_SALE_CUTOVER, taiyakiUnitPrice, type OrderDraft } from "@/lib/order";
 
 type SalesDay = {
   date: string;
@@ -26,6 +26,7 @@ export async function GET() {
 
   try {
     const sql = neon(databaseUrl);
+    await sql`UPDATE taiyaki_orders SET total_yen = COALESCE((SELECT SUM(COALESCE((item->>'quantity')::int, 0)) FROM jsonb_array_elements(COALESCE(order_data->'taiyaki', '[]'::jsonb)) AS item), 0) * 100 + LEAST(COALESCE((order_data #>> '{memos,student}')::int, 0), COALESCE((order_data #>> '{memos,guardian}')::int, 0)) * 1000 + (COALESCE((order_data #>> '{memos,student}')::int, 0) - LEAST(COALESCE((order_data #>> '{memos,student}')::int, 0), COALESCE((order_data #>> '{memos,guardian}')::int, 0))) * 500 + (COALESCE((order_data #>> '{memos,guardian}')::int, 0) - LEAST(COALESCE((order_data #>> '{memos,student}')::int, 0), COALESCE((order_data #>> '{memos,guardian}')::int, 0))) * 600 WHERE created_at >= ${TAIYAKI_SALE_CUTOVER.toISOString()}`;
     const rows =
       await sql`SELECT order_data, total_yen, created_at FROM taiyaki_orders ORDER BY created_at DESC LIMIT 10000`;
     const byDate = new Map<string, SalesDay>();
@@ -62,12 +63,12 @@ export async function GET() {
           hourlyFlavor[item.flavor] = (hourlyFlavor[item.flavor] ?? 0) + quantity;
         }
         const flavor = flavors.get(item.flavor) ?? { name: item.flavor, total: 0, count: 0 };
-        flavor.total += taiyakiUnitPrice(item) * quantity;
+        flavor.total += taiyakiUnitPrice(item, String(row.created_at)) * quantity;
         flavor.count += quantity;
         flavors.set(item.flavor, flavor);
         for (const topping of item.toppings ?? [])
           day.toppings[topping] = (day.toppings[topping] ?? 0) + quantity;
-        return sum + taiyakiUnitPrice(item) * quantity;
+        return sum + taiyakiUnitPrice(item, String(row.created_at)) * quantity;
       }, 0);
       const student = Number(draft.memos?.student ?? 0);
       const guardian = Number(draft.memos?.guardian ?? 0);

@@ -16,13 +16,20 @@ export const toppingOptions: { label: string; toppings: Topping[] }[] = [
   { label: "アイスとホイップ", toppings: ["アイス", "ホイップ"] },
 ];
 
-export function taiyakiUnitPrice(item: TaiyakiItem) {
+export const TAIYAKI_SALE_CUTOVER = new Date("2026-10-11T16:45:00+09:00");
+
+export function usesSaleTaiyakiPrice(at: Date | string | number = Date.now()) {
+  return new Date(at).getTime() >= TAIYAKI_SALE_CUTOVER.getTime();
+}
+
+export function taiyakiUnitPrice(item: TaiyakiItem, at: Date | string | number = Date.now()) {
+  if (usesSaleTaiyakiPrice(at)) return 100;
   const basePrice = item.toppings.length === 0 ? 300 : 350;
   return item.instagramFollow ? basePrice - 50 : basePrice;
 }
 
-export function taiyakiTotal(items: TaiyakiItem[]) {
-  return items.reduce((sum, item) => sum + taiyakiUnitPrice(item) * item.quantity, 0);
+export function taiyakiTotal(items: TaiyakiItem[], at: Date | string | number = Date.now()) {
+  return items.reduce((sum, item) => sum + taiyakiUnitPrice(item, at) * item.quantity, 0);
 }
 
 export function memoTotal(memos: MemoItems) {
@@ -30,8 +37,8 @@ export function memoTotal(memos: MemoItems) {
   return sets * 1000 + (memos.student - sets) * 500 + (memos.guardian - sets) * 600;
 }
 
-export function orderTotal(draft: OrderDraft) {
-  return taiyakiTotal(draft.taiyaki) + memoTotal(draft.memos);
+export function orderTotal(draft: OrderDraft, at: Date | string | number = Date.now()) {
+  return taiyakiTotal(draft.taiyaki, at) + memoTotal(draft.memos);
 }
 
 export function yen(value: number) { return new Intl.NumberFormat("ja-JP").format(value) + "円"; }

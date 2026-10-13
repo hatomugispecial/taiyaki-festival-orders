@@ -10,6 +10,7 @@ import {
   taiyakiTotal,
   taiyakiUnitPrice,
   toppingOptions,
+  usesSaleTaiyakiPrice,
   yen,
   type Customer,
   type OrderDraft,
@@ -192,18 +193,20 @@ export default function OrderPage() {
                       <strong>{item.flavor}</strong>
                       <span className="topping-label">{toppingOptions.find((option) => option.toppings.join("-") === item.toppings.join("-"))?.label}</span>
                       <span>{yen(taiyakiUnitPrice(item))} / 個</span>
-                      <label className="item-follow">
-                        <input
-                          type="checkbox"
-                          checked={item.instagramFollow}
-                          onChange={(event) =>
-                            updateTaiyaki(index, {
-                              instagramFollow: event.target.checked,
-                            })
-                          }
-                        />
-                        50円引き
-                      </label>
+                      {!usesSaleTaiyakiPrice() && (
+                        <label className="item-follow">
+                          <input
+                            type="checkbox"
+                            checked={item.instagramFollow}
+                            onChange={(event) =>
+                              updateTaiyaki(index, {
+                                instagramFollow: event.target.checked,
+                              })
+                            }
+                          />
+                          50円引き
+                        </label>
+                      )}
                     </div>
                     <Quantity
                       value={item.quantity}

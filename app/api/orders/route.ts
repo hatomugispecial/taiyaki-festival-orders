@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
-import { orderTotal, type OrderDraft } from "@/lib/order";
+import { orderTotal, TAIYAKI_SALE_CUTOVER, type OrderDraft } from "@/lib/order";
 
 export async function GET() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -11,6 +11,7 @@ export async function GET() {
     await sql`ALTER TABLE taiyaki_orders ADD COLUMN IF NOT EXISTS order_date date`;
     await sql`ALTER TABLE taiyaki_orders ADD COLUMN IF NOT EXISTS order_number integer`;
     await sql`WITH numbered AS (SELECT id, ROW_NUMBER() OVER (PARTITION BY (created_at AT TIME ZONE 'Asia/Tokyo')::date ORDER BY created_at, id) AS number, (created_at AT TIME ZONE 'Asia/Tokyo')::date AS date FROM taiyaki_orders) UPDATE taiyaki_orders AS orders SET order_date = numbered.date, order_number = numbered.number FROM numbered WHERE orders.id = numbered.id AND (orders.order_date IS NULL OR orders.order_number IS NULL)`;
+    await sql`UPDATE taiyaki_orders SET total_yen = COALESCE((SELECT SUM(COALESCE((item->>'quantity')::int, 0)) FROM jsonb_array_elements(COALESCE(order_data->'taiyaki', '[]'::jsonb)) AS item), 0) * 100 + LEAST(COALESCE((order_data #>> '{memos,student}')::int, 0), COALESCE((order_data #>> '{memos,guardian}')::int, 0)) * 1000 + (COALESCE((order_data #>> '{memos,student}')::int, 0) - LEAST(COALESCE((order_data #>> '{memos,student}')::int, 0), COALESCE((order_data #>> '{memos,guardian}')::int, 0))) * 500 + (COALESCE((order_data #>> '{memos,guardian}')::int, 0) - LEAST(COALESCE((order_data #>> '{memos,student}')::int, 0), COALESCE((order_data #>> '{memos,guardian}')::int, 0))) * 600 WHERE created_at >= ${TAIYAKI_SALE_CUTOVER.toISOString()}`;
     const rows = await sql`SELECT id, order_date, order_number, total_yen, order_data, handed, created_at FROM taiyaki_orders ORDER BY created_at DESC LIMIT 100`;
     return NextResponse.json({ ok: true, rows });
   } catch (error) {
